@@ -6,6 +6,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AggregatorV3Interface} from
     "lib/chainlink-brownie-contracts/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {OracleLib} from "@src/libraries/OracleLib.sol";
 /*
     @title Decentralized Stable Engine
     @author PKerty
@@ -34,6 +35,8 @@ contract DSEngine is ReentrancyGuard {
 
     error DSEngine__HealthFactorNotBroken();
     error DSEngine__HealthFactorNotImproved();
+
+    using OracleLib for AggregatorV3Interface;
 
     //////////////////
     //State vars   //
@@ -266,13 +269,13 @@ contract DSEngine is ReentrancyGuard {
 
     function getUSDValue(address token, uint256 amount) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
-        (, int256 price,,,) = priceFeed.latestRoundData();
+        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
         return ((uint256(price) * ADDITIONAL_FEED_PRECISION) * amount) / PRECISION;
     }
 
     function getTokenAmountFromUsd(address token, uint256 usdAmountInWei) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
-        (, int256 price,,,) = priceFeed.latestRoundData();
+        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
         return (usdAmountInWei * PRECISION) / (uint256(price) * ADDITIONAL_FEED_PRECISION);
     }
 
@@ -288,5 +291,7 @@ contract DSEngine is ReentrancyGuard {
     function getAccountCollateral(address user, address token) public view returns (uint256) {
        return s_collateralDeposited[user][token];
     }
-
+    function getPriceFeed(address token) public view returns(address){
+        return s_priceFeeds[token];
+    }
 }

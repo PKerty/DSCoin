@@ -9,6 +9,7 @@ import {DSCoin} from "@src/DSCoin.sol";
 import {HelperConfig} from "@script/HelperConfig.s.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
+import {MockV3Aggregator} from "@test/mocks/MockV3Agreggator.sol";
 
 contract Handler is Test { 
     DeployDSC deployer;
@@ -17,6 +18,9 @@ contract Handler is Test {
     ERC20Mock wETH;
     ERC20Mock wBTC;
 
+
+    address wETHPriceFeed;
+    address wBTCPriceFeed;
 
     address[] addressWithCollateralDeposited;
     uint256 public constant MAX_DEPOSIT_SIZE = type(uint96).max;
@@ -27,8 +31,20 @@ contract Handler is Test {
         address[] memory collateralTokens = engine.getCollateralTokens(); 
         wETH = ERC20Mock(collateralTokens[0]);
         wBTC = ERC20Mock(collateralTokens[1]);
+        wETHPriceFeed = engine.getPriceFeed(address(wETH));
+        wBTCPriceFeed = engine.getPriceFeed(address(wBTC));
     }
 
+    /*
+        This function is used to update the price feed of the wETH and wBTC
+        It can break the invariant, but won't be solved in this tutorial.
+        Since a plummet in price breaks the protocol, this is what is called a
+        known bug.
+    function updateCollateralValue(uint96 newValue) public {
+        MockV3Aggregator(wETHPriceFeed).updateAnswer(int256(uint256(newValue)));
+    }
+
+    */
     function  depositCollateral(uint256 collateralSeed, uint256 amount) public {
         amount = bound(amount,1, MAX_DEPOSIT_SIZE);
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
