@@ -279,4 +279,14 @@ contract DSEngine is ReentrancyGuard {
     function getAccountInformation(address user) external view returns(uint256 totalDSCMinted, uint256 collateralValueInUSD) {
         (totalDSCMinted, collateralValueInUSD) = _getAddressInformation(user);
     }
+
+    function getCollateralTokens() public view returns(address[] memory) {
+        return s_collateralTokens;
+
+    }
+
+    function getAccountCollateral(address user, address token) public view returns (uint256) {
+       return s_collateralDeposited[user][token];
+    }
+
 }
